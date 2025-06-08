@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Settlement" ADD COLUMN     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

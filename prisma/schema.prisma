@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  password          String
+  lightning_address String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // Relations
+  created_groups       GroupMember[]
+  expenses             Expense[]
+  group_creator        Group[]
+  settlements_sent     Settlement[]  @relation("fromUserSettlement")
+  settlements_received Settlement[]  @relation("toUserSettlement")
+
+  @@map("users")
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  created_by  String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  creator    User          @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  members    GroupMember[]
+  expenses   Expense[]
+  Settlement Settlement[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  group_id  String
+  user_id   String
+  joined_at DateTime @default(now())
+
+  // Relations
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([group_id, user_id])
+  @@map("group_members")
+}
+
+model Expense {
+  id              String   @id @default(cuid())
+  group_id        String
+  user_id         String
+  description     String
+  amount_eur      Decimal  @db.Decimal(10, 2)
+  amount_satoshis BigInt
+  currency        String // EUR or SATS
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  // Relations
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
+
+model Settlement {
+  id                 String   @id @default(cuid())
+  group_id           String
+  from_user_id       String
+  to_user_id         String
+  amount             BigInt
+  received_confirmed Boolean  @default(false)
+  created_at         DateTime @default(now())
+
+  // Relations
+  group     Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  from_user User  @relation(fields: [from_user_id], references: [id], onDelete: Cascade, name: "fromUserSettlement")
+  to_user   User  @relation(fields: [to_user_id], references: [id], onDelete: Cascade, name: "toUserSettlement")
+}
