@@ -9,7 +9,7 @@
     "preview": "nuxt preview",
     "prisma:generate": "prisma generate",
     "db:push": "prisma db push",
-    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "postinstall": "nuxt prepare && npm run prisma:generate",
     "start": "npm run prisma:migrate && npm run prisma:generate && node server/index.mjs"
