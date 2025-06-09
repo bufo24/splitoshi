@@ -1,6 +1,6 @@
-FROM node:20-alpine as base
+FROM node:20-alpine AS base
 
-FROM base as setup
+FROM base AS setup
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -36,7 +36,7 @@ COPY . .
 
 RUN pnpm run build
 
-RUN pnpm run db:generate
+RUN pnpm run prisma:generate
 
 # ---------------
 # Final App
@@ -44,15 +44,15 @@ RUN pnpm run db:generate
 FROM base 
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./
-COPY --from=builder /app/.output ./.output
+COPY --from=builder /app/.output ./
 
 EXPOSE 3000
 
-ENV PORT 3000
+ENV PORT=3000
 
-ENTRYPOINT ["node", ".output/server/index.mjs"]
+ENTRYPOINT ["node", "server/index.mjs"]
