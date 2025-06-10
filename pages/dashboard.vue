@@ -6,7 +6,7 @@
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center gap-3">
             <Zap class="w-8 h-8 text-bitcoin" />
-            <h1 class="text-xl font-bold text-gray-900 dark:text-white">LightningSplit</h1>
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white">Splitoshi</h1>
           </div>
           
           <div class="flex items-center gap-4">

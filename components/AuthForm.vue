@@ -4,7 +4,7 @@
       <div class="text-center mb-6">
         <div class="inline-flex items-center gap-2 text-bitcoin text-3xl font-bold mb-2">
           <Zap class="w-8 h-8" />
-          LightningSplit
+          Splitoshi
         </div>
         <p class="text-gray-600 dark:text-gray-400">
           {{ isLogin ? 'Sign in to your account' : 'Create your account' }}
