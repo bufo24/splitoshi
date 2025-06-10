@@ -2,8 +2,9 @@ import { z } from 'zod'
 import { prisma } from '~/lib/prisma'
 import { getUserFromToken } from '~/lib/auth'
 
-const joinGroupSchema = z.object({
-  groupId: z.string().uuid()  // Assuming UUID for group IDs
+const createGroupSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional()
 })
 
 export default defineEventHandler(async (event) => {
@@ -27,41 +28,33 @@ export default defineEventHandler(async (event) => {
 
   try {
     const body = await readBody(event)
+    const { name, description } = createGroupSchema.parse(body)
 
-    const { groupId } = joinGroupSchema.parse(body)
-
-    const group = await prisma.group.findUnique({
-      where: { id: groupId },
-      include: {
-        members: true
-      }
-    })
-
-
-    if (!group) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: 'Group not found'
-      })
-    }
-
-    const alreadyMember = group.members.some(member => member.user_id === user.id)
-
-    if (alreadyMember) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Already a member of this group'
-      })
-    }
-
-    await prisma.member.create({
+    const group = await prisma.group.create({
       data: {
-        group_id: groupId,
-        user_id: user.id
+        name,
+        description,
+        created_by: user.id,
+        members: {
+          create: {
+            user_id: user.id
+          }
+        }
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                email: true
+              }
+            }
+          }
+        }
       }
     })
 
-    return { message: 'Successfully joined the group' }
+    return { group }
   } catch (error: any) {
     throw createError({
       statusCode: 400,
