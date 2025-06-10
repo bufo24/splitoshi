@@ -4,8 +4,6 @@ export const useBitcoinPrice = () => {
   const error = ref<string | null>(null)
 
   const fetchBitcoinPrice = async () => {
-    bitcoinPrice.value = 100000;
-    return;
     loading.value = true
     error.value = null
     
