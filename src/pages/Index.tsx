@@ -27,9 +27,12 @@ const Index = () => {
   };
 
   const handleJoinGroup = () => {
-    if (groupCode) {
+    if (groupCode.toLowerCase() === "btcpp") {
+      console.log("Joining BTC++ group with code:", groupCode);
+      navigate("/group/btcpp");
+    } else if (groupCode) {
       console.log("Joining group:", groupCode);
-      navigate("/group/1"); // Mock group ID
+      navigate("/group/1"); // Mock group ID for other codes
     }
   };
 

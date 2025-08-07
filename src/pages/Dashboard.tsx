@@ -16,6 +16,12 @@ import {
 
 const mockGroups = [
   {
+    id: "btcpp",
+    name: "BTC++ Conference 2024",
+    memberCount: 12,
+    totalBalance: 850000 // 850k sats
+  },
+  {
     id: "1",
     name: "Vegas Trip 2024",
     memberCount: 4,
@@ -93,8 +99,8 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm opacity-90">Total Balance</p>
-                  <p className="text-2xl font-bold">475,000 sats</p>
-                  <p className="text-xs opacity-75">≈ $237.50</p>
+                  <p className="text-2xl font-bold">1,325,000 sats</p>
+                  <p className="text-xs opacity-75">≈ $662.50</p>
                 </div>
                 <TrendingUp className="h-8 w-8 opacity-80" />
               </div>
@@ -106,7 +112,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Active Groups</p>
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-2xl font-bold">4</p>
                   <p className="text-xs text-muted-foreground">Groups joined</p>
                 </div>
                 <Users className="h-8 w-8 text-muted-foreground" />

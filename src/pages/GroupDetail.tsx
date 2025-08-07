@@ -15,6 +15,7 @@ import {
   DollarSign,
   Bitcoin
 } from "lucide-react";
+import { useParams } from "react-router-dom";
 
 const mockExpenses = [
   {
@@ -49,6 +50,49 @@ const mockExpenses = [
   }
 ];
 
+const btcppExpenses = [
+  {
+    id: "btc1",
+    description: "Conference Registration Fees",
+    amount: 400000, // 400k sats
+    paidBy: "DevRel Alice",
+    paidByInitials: "DA",
+    createdAt: "2024-01-10",
+    settled: false,
+    yourShare: 33333 // 33.3k sats (1/12 split)
+  },
+  {
+    id: "btc2", 
+    description: "Group Dinner - Bitcoin Pizza Place",
+    amount: 180000, // 180k sats
+    paidBy: "Lightning Bob",
+    paidByInitials: "LB",
+    createdAt: "2024-01-09",
+    settled: true,
+    yourShare: 15000 // 15k sats
+  },
+  {
+    id: "btc3",
+    description: "Shared AirBnB - Bitcoin House",
+    amount: 600000, // 600k sats
+    paidBy: "Satoshi Charlie",
+    paidByInitials: "SC",
+    createdAt: "2024-01-08",
+    settled: false,
+    yourShare: 50000 // 50k sats
+  },
+  {
+    id: "btc4",
+    description: "Workshop Materials & Swag",
+    amount: 120000, // 120k sats
+    paidBy: "You",
+    paidByInitials: "YU",
+    createdAt: "2024-01-07",
+    settled: false,
+    yourShare: 10000 // 10k sats
+  }
+];
+
 const mockMembers = [
   { id: "1", name: "Alice", initials: "AL", lightningAddress: "alice@getalby.com", balance: 37500 },
   { id: "2", name: "Bob", initials: "BO", lightningAddress: "bob@wallet.bitcoin.org", balance: -18750 },
@@ -56,12 +100,35 @@ const mockMembers = [
   { id: "4", name: "You", initials: "YU", lightningAddress: "you@strike.me", balance: -81250 }
 ];
 
+const btcppMembers = [
+  { id: "1", name: "DevRel Alice", initials: "DA", lightningAddress: "alice@bitcoin.org", balance: 25000 },
+  { id: "2", name: "Lightning Bob", initials: "LB", lightningAddress: "bob@ln.dev", balance: -15000 },
+  { id: "3", name: "Satoshi Charlie", initials: "SC", lightningAddress: "charlie@sats.com", balance: 45000 },
+  { id: "4", name: "Hodler Dave", initials: "HD", lightningAddress: "dave@btc.holdings", balance: -12000 },
+  { id: "5", name: "Miner Eve", initials: "ME", lightningAddress: "eve@mining.pool", balance: 8000 },
+  { id: "6", name: "Dev Frank", initials: "DF", lightningAddress: "frank@core.dev", balance: -22000 },
+  { id: "7", name: "Trader Grace", initials: "TG", lightningAddress: "grace@exchange.btc", balance: 18000 },
+  { id: "8", name: "NodeRunner Henry", initials: "NH", lightningAddress: "henry@mynode.local", balance: -8500 },
+  { id: "9", name: "Lightning Lisa", initials: "LL", lightningAddress: "lisa@lightning.network", balance: 12000 },
+  { id: "10", name: "Stack Sam", initials: "SS", lightningAddress: "sam@stacksats.io", balance: -5000 },
+  { id: "11", name: "Orange Maya", initials: "OM", lightningAddress: "maya@orange.pilled", balance: 15000 },
+  { id: "12", name: "You", initials: "YU", lightningAddress: "you@strike.me", balance: -60500 }
+];
+
 const GroupDetail = () => {
   const navigate = useNavigate();
+  const { id: groupId } = useParams();
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showSettleModal, setShowSettleModal] = useState(false);
   const [settlingExpenseId, setSettlingExpenseId] = useState<string | null>(null);
   const [newExpense, setNewExpense] = useState({ description: "", amount: "" });
+
+  // Use different data based on group ID
+  const isBtcppGroup = groupId === "btcpp";
+  const expenses = isBtcppGroup ? btcppExpenses : mockExpenses;
+  const members = isBtcppGroup ? btcppMembers : mockMembers;
+  const groupName = isBtcppGroup ? "BTC++ Conference 2024" : "Vegas Trip 2024";
+  const memberCount = members.length;
 
   const handleSettle = (expenseId: string) => {
     console.log("Settling expense:", expenseId);
@@ -75,8 +142,8 @@ const GroupDetail = () => {
     setNewExpense({ description: "", amount: "" });
   };
 
-  const totalGroupBalance = mockExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const pendingSettlements = mockExpenses.filter(e => !e.settled).length;
+  const totalGroupBalance = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const pendingSettlements = expenses.filter(e => !e.settled).length;
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -89,8 +156,8 @@ const GroupDetail = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-xl font-bold">Vegas Trip 2024</h1>
-                <p className="text-sm text-muted-foreground">4 members</p>
+                <h1 className="text-xl font-bold">{groupName}</h1>
+                <p className="text-sm text-muted-foreground">{memberCount} members</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -131,7 +198,7 @@ const GroupDetail = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Group Members</p>
-                  <p className="text-2xl font-bold">{mockMembers.length}</p>
+                  <p className="text-2xl font-bold">{memberCount}</p>
                   <p className="text-xs text-muted-foreground">Active participants</p>
                 </div>
                 <Users className="h-8 w-8 text-muted-foreground" />
@@ -158,11 +225,11 @@ const GroupDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Recent Expenses</h2>
-              <Badge variant="secondary">{mockExpenses.length} expenses</Badge>
+              <Badge variant="secondary">{expenses.length} expenses</Badge>
             </div>
             
             <div className="space-y-4">
-              {mockExpenses.map((expense) => (
+              {expenses.map((expense) => (
                 <ExpenseCard
                   key={expense.id}
                   {...expense}
@@ -179,7 +246,7 @@ const GroupDetail = () => {
                 <CardTitle className="text-lg">Group Members</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {mockMembers.map((member) => (
+                {members.map((member) => (
                   <div key={member.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
