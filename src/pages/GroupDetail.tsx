@@ -20,10 +20,14 @@ import {
 import { useParams } from "react-router-dom";
 
 const getQr = (data: string) => {
-  const qr = qrcode(0, 'L');
+  const qr = qrcode(0, 'Q');
   qr.addData(data);
   qr.make();
   return qr.createSvgTag();
+}
+
+const setAllAsSettled = () => {
+  btcppExpenses = btcppExpenses.map((e) => ({...e, settled: true}))
 }
 
 const mockExpenses = [
@@ -59,7 +63,7 @@ const mockExpenses = [
   }
 ];
 
-const btcppExpenses = [
+let btcppExpenses = [
   {
     id: "btc1",
     description: "Conference Registration Fees",
@@ -138,7 +142,7 @@ const GroupDetail = () => {
   const isBtcppGroup = groupId === "btcpp";
   const expenses = isBtcppGroup ? btcppExpenses : mockExpenses;
   const members = isBtcppGroup ? btcppMembers : mockMembers;
-  const groupName = isBtcppGroup ? "BTC++ Conference 2024" : "Vegas Trip 2024";
+  const groupName = isBtcppGroup ? "BTC++ Conference 2025" : "Vegas Trip 2024";
   const memberCount = members.length;
 
   const handleSettle = (expenseId: string) => {
@@ -164,10 +168,19 @@ const GroupDetail = () => {
 
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = (description: string, amount: string) => {
     console.log("Adding expense:", newExpense);
     setShowAddExpense(false);
-    setNewExpense({ description: "", amount: "" });
+    setNewExpense({ description, amount });
+    expenses.push({
+      amount: +amount,
+      description,
+      createdAt: new Date().toISOString(),
+      id: 'id',
+      paidBy: 'Bufo',
+      paidByInitials: 'BB',settled: false,
+      yourShare: 0
+    })
   };
 
   const closeModal = () => {
@@ -180,7 +193,9 @@ const GroupDetail = () => {
   
   // Calculate total amount you owe across all unsettled expenses
   const unsettledExpenses = expenses.filter(e => !e.settled);
-  const totalOwed = unsettledExpenses.reduce((sum, expense) => sum + expense.yourShare, 0);
+  const totalOwed = unsettledExpenses.reduce((sum, expense) => 
+    expense.settled ? sum : sum + expense.yourShare
+  , 0);
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -282,7 +297,7 @@ const GroupDetail = () => {
             </div>
             
             <div className="space-y-4">
-              {expenses.map((expense) => (
+              {expenses.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((expense) => (
                 <ExpenseCard
                   key={expense.id}
                   {...expense}
@@ -366,7 +381,7 @@ const GroupDetail = () => {
                     Cancel
                   </Button>
                   <Button 
-                    onClick={handleAddExpense}
+                    onClick={() => handleAddExpense(newExpense.description, newExpense.amount)}
                     disabled={!newExpense.description || !newExpense.amount}
                     className="flex-1 bg-gradient-bitcoin hover:opacity-90"
                   >
@@ -499,6 +514,8 @@ const GroupDetail = () => {
                   <Button 
                     onClick={() => {
                       console.log("Payment confirmed for all expenses, total:", totalOwed);
+
+                      setAllAsSettled();
                       setShowSettleAllModal(false);
                     }}
                     className="flex-1 bg-gradient-lightning hover:opacity-90"
