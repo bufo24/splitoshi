@@ -120,6 +120,7 @@ const GroupDetail = () => {
   const { id: groupId } = useParams();
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [showSettleModal, setShowSettleModal] = useState(false);
+  const [showSettleAllModal, setShowSettleAllModal] = useState(false);
   const [settlingExpenseId, setSettlingExpenseId] = useState<string | null>(null);
   const [newExpense, setNewExpense] = useState({ description: "", amount: "" });
 
@@ -136,6 +137,11 @@ const GroupDetail = () => {
     setShowSettleModal(true);
   };
 
+  const handleSettleAll = () => {
+    console.log("Settling all expenses");
+    setShowSettleAllModal(true);
+  };
+
   const handleAddExpense = () => {
     console.log("Adding expense:", newExpense);
     setShowAddExpense(false);
@@ -144,6 +150,10 @@ const GroupDetail = () => {
 
   const totalGroupBalance = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const pendingSettlements = expenses.filter(e => !e.settled).length;
+  
+  // Calculate total amount you owe across all unsettled expenses
+  const unsettledExpenses = expenses.filter(e => !e.settled);
+  const totalOwed = unsettledExpenses.reduce((sum, expense) => sum + expense.yourShare, 0);
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -225,7 +235,19 @@ const GroupDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Recent Expenses</h2>
-              <Badge variant="secondary">{expenses.length} expenses</Badge>
+              <div className="flex items-center gap-3">
+                <Badge variant="secondary">{expenses.length} expenses</Badge>
+                {totalOwed > 0 && (
+                  <Button 
+                    size="sm"
+                    onClick={handleSettleAll}
+                    className="bg-gradient-lightning hover:opacity-90"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Settle All ({totalOwed.toLocaleString()} sats)
+                  </Button>
+                )}
+              </div>
             </div>
             
             <div className="space-y-4">
@@ -381,6 +403,77 @@ const GroupDetail = () => {
                   >
                     <Zap className="h-4 w-4 mr-2" />
                     Paid
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Settle All Modal */}
+        {showSettleAllModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md mx-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-accent" />
+                  Settle All Expenses
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center space-y-3">
+                  <div className="p-4 bg-gradient-lightning/10 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Total amount to pay</p>
+                    <p className="text-2xl font-bold font-mono">{totalOwed.toLocaleString()} sats</p>
+                    <p className="text-xs text-muted-foreground">≈ ${(totalOwed / 100000000 * 50000).toFixed(2)} USD</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Settling {unsettledExpenses.length} expenses:</p>
+                    <div className="max-h-24 overflow-y-auto space-y-1 text-xs text-muted-foreground">
+                      {unsettledExpenses.map((expense) => (
+                        <div key={expense.id} className="flex justify-between">
+                          <span>{expense.description}</span>
+                          <span>{expense.yourShare.toLocaleString()} sats</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Lightning Invoice:</p>
+                    <div className="p-3 bg-muted rounded font-mono text-xs break-all">
+                      lnbc{totalOwed}n1p3xnhl2pp5qvnjh4k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8...
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Combined invoice for all your outstanding expenses
+                    </p>
+                  </div>
+
+                  <div className="w-32 h-32 mx-auto bg-white border-2 border-border rounded-lg flex items-center justify-center">
+                    <div className="text-xs text-muted-foreground text-center">
+                      QR Code<br/>Would appear here
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowSettleAllModal(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      console.log("Payment confirmed for all expenses, total:", totalOwed);
+                      setShowSettleAllModal(false);
+                    }}
+                    className="flex-1 bg-gradient-lightning hover:opacity-90"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Pay All
                   </Button>
                 </div>
               </CardContent>
