@@ -1,3 +1,4 @@
+import qrcode from 'qrcode-generator'
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +14,17 @@ import {
   Zap, 
   Share,
   DollarSign,
-  Bitcoin
+  Bitcoin,
+  QrCode
 } from "lucide-react";
 import { useParams } from "react-router-dom";
+
+const getQr = (data: string) => {
+  const qr = qrcode(0, 'L');
+  qr.addData(data);
+  qr.make();
+  return qr.createSvgTag();
+}
 
 const mockExpenses = [
   {
@@ -122,6 +131,7 @@ const GroupDetail = () => {
   const [showSettleModal, setShowSettleModal] = useState(false);
   const [showSettleAllModal, setShowSettleAllModal] = useState(false);
   const [settlingExpenseId, setSettlingExpenseId] = useState<string | null>(null);
+  const [invoice, setInvoice] = useState<string | null>(null);
   const [newExpense, setNewExpense] = useState({ description: "", amount: "" });
 
   // Use different data based on group ID
@@ -137,9 +147,21 @@ const GroupDetail = () => {
     setShowSettleModal(true);
   };
 
-  const handleSettleAll = () => {
+  const handleSettleAll = async () => {
     console.log("Settling all expenses");
+    const sats = 93_333;
+
+
     setShowSettleAllModal(true);
+
+    const lnAddress = 'lavenderopossum38@bancolibre.com';
+    const [username, domain] = lnAddress.split('@');
+    const res = await fetch(`https://${domain}/.well-known/lnurlp/${username}`);
+    const callback = (await res.json()).callback;
+    const res2 = await fetch(`${callback}?amount=${sats*1000}`);
+    const pr = (await res2.json()).pr;
+    setInvoice(pr);
+
   };
 
   const handleAddExpense = () => {
@@ -147,6 +169,11 @@ const GroupDetail = () => {
     setShowAddExpense(false);
     setNewExpense({ description: "", amount: "" });
   };
+
+  const closeModal = () => {
+    setShowSettleAllModal(false)
+    // setInvoice(null)
+  }
 
   const totalGroupBalance = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const pendingSettlements = expenses.filter(e => !e.settled).length;
@@ -171,6 +198,10 @@ const GroupDetail = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <div className="flex gap-3 bg-gradient-lightning p-4 rounded-lg">
+<p>lavenderopossum38@bancolibre.com</p> <Zap></Zap>
+              </div>
+              
               <Button variant="outline" size="sm">
                 <Share className="h-4 w-4 mr-2" />
                 Invite
@@ -377,7 +408,7 @@ const GroupDetail = () => {
 
                   <div className="w-32 h-32 mx-auto bg-white border-2 border-border rounded-lg flex items-center justify-center">
                     <div className="text-xs text-muted-foreground text-center">
-                      QR Code<br/>Would appear here
+                      {}
                     </div>
                   </div>
                 </div>
@@ -443,16 +474,16 @@ const GroupDetail = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Lightning Invoice:</p>
                     <div className="p-3 bg-muted rounded font-mono text-xs break-all">
-                      lnbc{totalOwed}n1p3xnhl2pp5qvnjh4k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8k7r8k8...
+                      {!invoice ? 'Generating invoice...' : invoice}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Combined invoice for all your outstanding expenses
-                    </p>
+                      </p>
                   </div>
 
-                  <div className="w-32 h-32 mx-auto bg-white border-2 border-border rounded-lg flex items-center justify-center">
+                  <div className="w-56 h-56 mx-auto bg-white border-2 border-border rounded-lg flex items-center justify-center">
                     <div className="text-xs text-muted-foreground text-center">
-                      QR Code<br/>Would appear here
+                      {invoice ? (<div dangerouslySetInnerHTML={{ __html: getQr(`lightning:${invoice}`) }} />) : ''}
                     </div>
                   </div>
                 </div>
@@ -460,7 +491,7 @@ const GroupDetail = () => {
                 <div className="flex gap-3 pt-4">
                   <Button 
                     variant="outline" 
-                    onClick={() => setShowSettleAllModal(false)}
+                    onClick={() => closeModal()}
                     className="flex-1"
                   >
                     Cancel
@@ -473,7 +504,7 @@ const GroupDetail = () => {
                     className="flex-1 bg-gradient-lightning hover:opacity-90"
                   >
                     <Zap className="h-4 w-4 mr-2" />
-                    Pay All
+                    Marked as Paid
                   </Button>
                 </div>
               </CardContent>

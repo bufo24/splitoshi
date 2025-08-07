@@ -79,7 +79,7 @@ export function ExpenseCard({
             className="w-full bg-gradient-lightning hover:opacity-90"
           >
             <Zap className="h-4 w-4 mr-2" />
-            Settle with Lightning
+            Update Expense
           </Button>
         )}
         <div className="text-xs text-muted-foreground">
